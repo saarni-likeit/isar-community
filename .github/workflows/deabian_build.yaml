@@ -38,14 +38,14 @@ jobs:
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | bash -s -- -y
-          source $HOME/.cargo/env
+          . "$HOME/.cargo/env"
           rustc --version
           cargo --version
 
       - name: Build Linux binary (x64)
         run: |
           export PATH="/root/flutter/bin:$PATH"
-          source $HOME/.cargo/env
+          . "$HOME/.cargo/env"
           flutter pub get
           bash tool/build_linux.sh x64
         working-directory: packages/isar_community
