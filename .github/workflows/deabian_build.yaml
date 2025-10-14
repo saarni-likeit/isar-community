@@ -1,0 +1,55 @@
+name: Build Isar for Linux (Debian Bookworm)
+
+on:
+  workflow_dispatch: # manual trigger only
+
+env:
+  FLUTTER_VERSION: "3.35.1"
+
+jobs:
+  build_linux:
+    name: Build Linux Binary (glibc 2.36)
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm-slim
+
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y curl git unzip xz-utils bash clang cmake pkg-config \
+                             libgtk-3-dev liblzma-dev libssl-dev \
+                             python3 ca-certificates build-essential
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        run: |
+          curl -LO https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
+          tar xf flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
+          mv flutter /opt/flutter
+          echo "/opt/flutter/bin" >> $GITHUB_PATH
+          flutter --version
+          flutter pub get
+        working-directory: packages/isar_community
+
+      - name: Install Rust
+        run: |
+          curl https://sh.rustup.rs -sSf | bash -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          source $HOME/.cargo/env
+          rustc --version
+          cargo --version
+
+      - name: Build Linux binary (x64)
+        run: |
+          bash tool/build_linux.sh x64
+        working-directory: packages/isar_community
+
+      - name: Upload built artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libisar_linux_x64.so
+          path: packages/isar_community/libisar_linux_x64.so
+          retention-days: 7
