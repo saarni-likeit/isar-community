@@ -14,6 +14,7 @@ jobs:
       image: debian:bookworm-slim
 
     steps:
+      # 1. Basic packages for Flutter + Rust + build tools
       - name: Install dependencies
         run: |
           apt-get update
@@ -21,10 +22,12 @@ jobs:
                              libgtk-3-dev liblzma-dev libssl-dev \
                              python3 ca-certificates build-essential
 
+      # 2. Pull repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Flutter (in /root)
+      # 3. Install Flutter (same as upstream)
+      - name: Install Flutter
         run: |
           set -e
           cd /root
@@ -35,6 +38,7 @@ jobs:
           flutter --version
           flutter precache
 
+      # 4. Install Rust (stable)
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | bash -s -- -y
@@ -42,20 +46,32 @@ jobs:
           rustc --version
           cargo --version
 
-      - name: Build Linux binary (x64)
+      # 5. Prepare environment (same as .github/actions/prepare-build)
+      - name: Prepare build
+        run: |
+          set -e
+          export PATH="/root/flutter/bin:$PATH"
+          . "$HOME/.cargo/env"
+
+          echo "=== Preparing build environment ==="
+          cd packages/isar_community
+          flutter pub get
+          cd ../isar_core
+          flutter pub get || true  # safe if no Flutter deps
+          cd ../../
+
+      # 6. Build Linux binary using the same script as official release
+      - name: Build Isar Linux binary
         run: |
           export PATH="/root/flutter/bin:$PATH"
           . "$HOME/.cargo/env"
-          flutter pub get
-          cd ../isar_core
-          cargo build --release
-          echo "=== Listing built files ==="
-          find ../../target -maxdepth 3 -type f -name "libisar*.so" -o -name "libisar*.a" -o -name "libisar*.rlib"
-        working-directory: packages/isar_community
+          echo "Running tool/build_linux.sh x64 ..."
+          bash tool/build_linux.sh x64
 
+      # 7. Upload result so you can download it from workflow page
       - name: Upload built artifact
         uses: actions/upload-artifact@v4
         with:
           name: libisar_linux_x64.so
-          path: packages/isar_community/libisar_linux_x64.so
+          path: libisar_linux_x64.so
           retention-days: 7
