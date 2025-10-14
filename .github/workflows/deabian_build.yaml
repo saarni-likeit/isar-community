@@ -47,7 +47,7 @@ jobs:
           export PATH="/root/flutter/bin:$PATH"
           . "$HOME/.cargo/env"
           flutter pub get
-          bash tool/build_linux.sh x64
+          bash ../../tool/build_linux.sh x64
         working-directory: packages/isar_community
 
       - name: Upload built artifact
