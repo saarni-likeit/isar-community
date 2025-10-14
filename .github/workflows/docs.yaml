@@ -1,10 +1,11 @@
 name: Unified Deploy Docs
 
 on:
-  push:
-    branches:
-      - main
-      - v3
+  # push:
+  #   branches:
+  #     - main
+  #     - v3
+  workflow_dispatch:
 
 jobs:
   deploy:

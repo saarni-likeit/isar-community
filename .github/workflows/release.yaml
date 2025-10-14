@@ -4,9 +4,10 @@ env:
   FLUTTER_OVERRIDE: "3.35.1"
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
+#   push:
+#     tags:
+#       - "*"
 
 jobs:
   verify_version:
