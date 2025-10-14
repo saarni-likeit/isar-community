@@ -24,18 +24,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Flutter
+      - name: Install Flutter (in /root)
         run: |
           set -e
-          cd /opt
+          cd /root
           curl -LO https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
           tar xf flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
-          git config --global --add safe.directory /opt/flutter
-          export PATH="/opt/flutter/bin:$PATH"
+          git config --global --add safe.directory /root/flutter
+          export PATH="/root/flutter/bin:$PATH"
           flutter --version
           flutter precache
-          flutter pub get
-        working-directory: packages/isar_community
 
       - name: Install Rust
         run: |
@@ -46,8 +44,9 @@ jobs:
 
       - name: Build Linux binary (x64)
         run: |
-          export PATH="/opt/flutter/bin:$PATH"
+          export PATH="/root/flutter/bin:$PATH"
           source $HOME/.cargo/env
+          flutter pub get
           bash tool/build_linux.sh x64
         working-directory: packages/isar_community
 
