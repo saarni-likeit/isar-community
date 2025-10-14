@@ -3,9 +3,6 @@ name: Build Isar for Linux (Debian Bookworm)
 on:
   workflow_dispatch:
 
-env:
-  FLUTTER_VERSION: "3.35.1"
-
 jobs:
   build_linux:
     name: Build Linux Binary (glibc 2.36)
@@ -14,31 +11,16 @@ jobs:
       image: debian:bookworm-slim
 
     steps:
-      # 1. Basic packages for Flutter + Rust + build tools
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get install -y curl git unzip xz-utils bash clang cmake pkg-config \
+          apt-get install -y curl git xz-utils bash clang cmake pkg-config \
                              libgtk-3-dev liblzma-dev libssl-dev \
                              python3 ca-certificates build-essential
 
-      # 2. Pull repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 3. Install Flutter (same as upstream)
-      - name: Install Flutter
-        run: |
-          set -e
-          cd /root
-          curl -LO https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
-          tar xf flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
-          git config --global --add safe.directory /root/flutter
-          export PATH="/root/flutter/bin:$PATH"
-          flutter --version
-          flutter precache
-
-      # 4. Install Rust (stable)
       - name: Install Rust
         run: |
           curl https://sh.rustup.rs -sSf | bash -s -- -y
@@ -46,29 +28,12 @@ jobs:
           rustc --version
           cargo --version
 
-      # 5. Prepare environment (same as .github/actions/prepare-build)
-      - name: Prepare build
+      - name: Build Linux binary using Isar's official script
         run: |
-          set -e
-          export PATH="/root/flutter/bin:$PATH"
-          . "$HOME/.cargo/env"
-
-          echo "=== Preparing build environment ==="
-          cd packages/isar_community
-          flutter pub get
-          cd ../isar_core
-          flutter pub get || true  # safe if no Flutter deps
-          cd ../../
-
-      # 6. Build Linux binary using the same script as official release
-      - name: Build Isar Linux binary
-        run: |
-          export PATH="/root/flutter/bin:$PATH"
           . "$HOME/.cargo/env"
           echo "Running tool/build_linux.sh x64 ..."
           bash tool/build_linux.sh x64
 
-      # 7. Upload result so you can download it from workflow page
       - name: Upload built artifact
         uses: actions/upload-artifact@v4
         with:
