@@ -11,6 +11,10 @@ jobs:
       image: debian:bookworm-slim
 
     steps:
+      - name: Show glibc version
+        run: |
+          ldd --version | head -n 1
+          
       - name: Install dependencies
         run: |
           apt-get update
